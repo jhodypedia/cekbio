@@ -183,9 +183,6 @@ const UI = {
         const dot    = isReg ? '🟢' : '🔴';
         const status = isReg ? 'Terhubung' : 'Tidak Terhubung';
         const c      = botState.config;
-        const dpS    = c.fetchDP  ? '🟢' : '🔴';
-        const bioS   = c.fetchBio ? '🟢' : '🔴';
-        const bizS   = c.fetchBiz ? '🟢' : '🔴';
 
         return (
 `🔍 *WA SUPER CHECKER PRO*
@@ -209,7 +206,7 @@ ${this.line('─', 28)}
 🪦 *Mati*
 ${this.line('─', 28)}
 📂 Kirim file \`.txt\` berisi daftar nomor
-_\\(satu nomor per baris, sertakan kode negara\\)_`
+_(satu nomor per baris, sertakan kode negara)_`
         );
     },
 
@@ -264,10 +261,10 @@ _Sistem akan otomatis terhubung setelah kode dimasukkan._`
         return (
 `⚠️ *Sesi WhatsApp Dikeluarkan!*
 ${this.line('─', 28)}
-Perangkat ini telah di\\-logout dari WhatsApp\\.
-Sesi lama telah dihapus otomatis\\.
+Perangkat ini telah di-logout dari WhatsApp.
+Sesi lama telah dihapus otomatis.
 
-Silakan login kembali melalui Dashboard\\.`
+Silakan login kembali melalui Dashboard.`
         );
     },
 
@@ -275,7 +272,7 @@ Silakan login kembali melalui Dashboard\\.`
         return (
 `✅ *WhatsApp Terhubung Kembali*
 ${this.line('─', 28)}
-Koneksi berhasil dipulihkan secara otomatis\\.`
+Koneksi berhasil dipulihkan secara otomatis.`
         );
     },
 
@@ -359,7 +356,7 @@ Pilih preset kecepatan:
 🏃 *50  · Cepat* ⭐       — delay 2 detik
 💨 *100 · Extreme*        — delay 1.5 detik
 
-_Batch besar = lebih cepat, risiko rate‑limit lebih tinggi_`
+_Batch besar = lebih cepat, risiko rate-limit lebih tinggi_`
         );
     },
 
@@ -438,7 +435,7 @@ ${this.line('─', 28)}
 ${this.line('─', 28)}
 🪦 *Tidak Terdaftar*  ·  ${dead} nomor
 ${this.line('━', 28)}
-📂 Mengirim ${[bizTotal > 0, perTotal > 0, dead > 0].filter(Boolean).length > 1 ? 'file‑file' : 'file'} hasil...`
+📂 Mengirim ${[bizTotal > 0, perTotal > 0, dead > 0].filter(Boolean).length > 1 ? 'file-file' : 'file'} hasil...`
         );
     },
 
@@ -495,7 +492,7 @@ teleBot.on('message', async (msg) => {
         }
 
         const wm = await teleBot.sendMessage(msg.chat.id,
-            `⏳ _Memproses login untuk_ \`+${phone}\`\\.\\.\\.`,
+            `⏳ _Memproses login untuk_ \`+${phone}\`...`,
             { parse_mode: 'Markdown' }
         );
         startWA(phone, msg.chat.id, wm.message_id);
@@ -507,7 +504,7 @@ teleBot.on('document', async (msg) => {
 
     if (!sock?.authState?.creds?.registered)
         return teleBot.sendMessage(msg.chat.id,
-            UI.error('WhatsApp belum terhubung\\. Login dulu via /dashboard\\.'),
+            UI.error('WhatsApp belum terhubung. Login dulu via /dashboard.'),
             { parse_mode: 'Markdown' }
         );
 
@@ -528,7 +525,7 @@ teleBot.on('document', async (msg) => {
 
         if (unique.length === 0)
             return teleBot.sendMessage(msg.chat.id,
-                UI.error('Tidak ada nomor valid ditemukan\\.\nPastikan format benar \\(sertakan kode negara\\)\\.'),
+                UI.error('Tidak ada nomor valid ditemukan.\nPastikan format benar (sertakan kode negara).'),
                 { parse_mode: 'Markdown' }
             );
 
@@ -732,29 +729,37 @@ async function processBulkCheck(numbers, config, chatId, msgId) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     await editOrSend(chatId, msgId, UI.finalReport(total, elapsed, errCount, buckets), backBtn());
 
-    // Kirim file hasil per tier
+    // ════════════════════════════════════════════════
+    // FORMATTER HASIL FILE .TXT
+    // ════════════════════════════════════════════════
     const fOpts = { contentType: 'text/plain' };
     const ts    = Date.now();
 
-    const fmtBiz = r =>
-        `Nomor       : +${r.num}\n` +
-        `Kategori    : ${r.category}\n` +
-        `Deskripsi   : ${r.description}\n` +
-        `Email       : ${r.email}\n` +
-        `Website     : ${r.website}\n` +
-        `Alamat      : ${r.address}\n` +
-        `FB Page     : ${r.fbPage}\n` +
-        `Bio/Status  : ${r.bio}\n` +
-        `Foto Profil : ${r.dp}\n` +
-        '─'.repeat(42) + '\n';
+    const cleanText = (txt) => txt ? txt.replace(/[\r\n]+/g, ' ').trim() : '-';
 
-    const fmtPer = r =>
-        `Nomor       : +${r.num}\n` +
-        `Bio/Status  : ${r.bio}\n` +
-        `Foto Profil : ${r.dp}\n` +
-        '─'.repeat(42) + '\n';
+    const fmtBiz = r => {
+        let text = `┌── [ +${r.num} ]\r\n`;
+        if (r.category !== '-')  text += `│ Kategori  : ${cleanText(r.category)}\r\n`;
+        if (r.bio !== '-')       text += `│ Bio       : ${cleanText(r.bio)}\r\n`;
+        if (r.email !== '-')     text += `│ Email     : ${cleanText(r.email)}\r\n`;
+        if (r.website !== '-')   text += `│ Website   : ${cleanText(r.website)}\r\n`;
+        if (r.address !== '-')   text += `│ Alamat    : ${cleanText(r.address)}\r\n`;
+        if (r.fbPage !== '-')    text += `│ FB Page   : ${cleanText(r.fbPage)}\r\n`;
+        if (r.description !== '-') text += `│ Deskripsi : ${cleanText(r.description)}\r\n`;
+        if (r.dp !== '-')        text += `│ DP URL    : ${r.dp}\r\n`;
+        text += `└${'─'.repeat(45)}\r\n\r\n`;
+        return text;
+    };
 
-    const fmtDead = r => `+${r.num}\n`;
+    const fmtPer = r => {
+        let text = `┌── [ +${r.num} ]\r\n`;
+        if (r.bio !== '-') text += `│ Bio       : ${cleanText(r.bio)}\r\n`;
+        if (r.dp !== '-')  text += `│ DP URL    : ${r.dp}\r\n`;
+        text += `└${'─'.repeat(45)}\r\n\r\n`;
+        return text;
+    };
+
+    const fmtDead = r => `+${r.num}\r\n`;
 
     const files = [
         { key: 'biz_exclusive', label: 'WA_Bisnis_EXCLUSIVE', fmt: fmtBiz  },
@@ -768,11 +773,13 @@ async function processBulkCheck(numbers, config, chatId, msgId) {
 
     for (const { key, label, fmt } of files) {
         const rows = buckets[key];
-        if (rows.length === 0) continue;
+        if (rows.length === 0) continue; 
+        
         const header = buildFileHeader(label, rows.length, config);
         const buf    = Buffer.from(header + rows.map(fmt).join(''), 'utf-8');
         await teleBot.sendDocument(chatId, buf, {}, { ...fOpts, filename: `${label}_${ts}.txt` });
-        await delay(600);
+        
+        await delay(800); 
     }
 }
 
@@ -781,14 +788,18 @@ async function processBulkCheck(numbers, config, chatId, msgId) {
 // ════════════════════════════════════════════════
 function buildFileHeader(label, count, config) {
     const now = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
-    const line = '═'.repeat(48);
+    const line = '══════════════════════════════════════════════════';
+    
+    const cleanLabel = label.replace(/_/g, ' ');
+
     return (
-        line + '\n' +
-        `  ★ WA SUPER CHECKER PRO  —  ${label}\n` +
-        line + '\n' +
-        `  Tanggal    : ${now} WIB\n` +
-        `  Total      : ${count} nomor\n` +
-        `  Batch      : ${config.batch} nomor  |  Delay: ${(config.delay/1000).toFixed(1)}s\n` +
-        line + '\n\n'
+        line + '\r\n' +
+        ` ★ WA SUPER CHECKER PRO  —  ${cleanLabel}\r\n` +
+        line + '\r\n' +
+        ` Tanggal    : ${now} WIB\r\n` +
+        ` Total      : ${count} nomor\r\n` +
+        ` Batch      : ${config.batch} nomor / sesi\r\n` +
+        ` Delay      : ${(config.delay/1000).toFixed(1)} detik\r\n` +
+        line + '\r\n\r\n'
     );
 }
